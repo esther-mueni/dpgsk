@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<style>body{margin:0}</style>
+<title>DPGSK Members Prototype</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600&display=swap">
+<style>
+/* Layout: a real app shell. Admin = left sidebar + content; Member = simple top nav. On phones both collapse to a scrolling tab row. Single light theme, chosen on purpose. */
+:root{
+  --sky:#eef4fa; --paper:#fff; --navy:#10265c; --soft:#56658c; --faint:#8b97b5; --line:#dde6f1;
+  --blue:#2463d6; --blue-bg:#e3ecfc;
+  --paid:#1c8657; --paid-bg:#e2f5ec; --due:#b86f00; --due-bg:#fdf0d8; --late:#c0392b; --late-bg:#fde6e3;
+  --head:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --body:"Figtree",ui-sans-serif,system-ui,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--sky);color:var(--navy);font-family:var(--body);font-size:15.5px;line-height:1.55}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px;border-radius:6px}
+.demo{background:var(--navy);color:#fff;font-size:13px;padding-block:8px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;justify-content:space-between;gap:8px 16px;flex-wrap:wrap;align-items:center}
+.demo button{all:unset;cursor:pointer;font-weight:600;text-decoration:underline;text-underline-offset:3px}
+h1,h2,h3{font-family:var(--head);margin:0;line-height:1.15;letter-spacing:-.01em;text-wrap:balance}
+h1{font-size:clamp(28px,4vw,40px);font-weight:700}
+h2{font-size:24px;font-weight:600}
+h3{font-size:17px;font-weight:600}
+.muted{color:var(--soft)}
+.btn{border:0;border-radius:999px;padding:10px 18px;font-weight:600;font-size:14.5px;background:var(--blue);color:#fff;cursor:pointer}
+.btn.ghost{background:var(--paper);color:var(--navy);box-shadow:inset 0 0 0 1px var(--line)}
+.btn.sm{padding:7px 14px;font-size:13.5px}
+.btn:disabled{opacity:.45;cursor:default}
+.tag{display:inline-block;font-size:13px;font-weight:600;padding:3px 11px;border-radius:999px;white-space:nowrap}
+.paid{background:var(--paid-bg);color:var(--paid)}.owes{background:var(--due-bg);color:var(--due)}.late{background:var(--late-bg);color:var(--late)}.info{background:var(--blue-bg);color:var(--blue)}
+.welcome{min-height:calc(100% - 40px);display:grid;place-items:center;padding-block:48px;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
+.wbox{max-width:860px;width:100%;display:grid;gap:28px}
+.wbox .lead{font-size:18px;max-width:34em;margin:0}
+.roles{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.role{all:unset;cursor:pointer;background:var(--paper);border-radius:20px;padding:26px;display:grid;gap:10px;box-shadow:0 1px 0 var(--line),0 16px 34px -26px rgba(16,38,92,.5);transition:transform .15s ease}
+.role:hover{transform:translateY(-2px)}
+.role:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+.role .ic{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:var(--blue-bg);color:var(--blue)}
+.role h2{font-size:22px}
+.role span.go{color:var(--blue);font-weight:600}
+.shell{display:grid;grid-template-columns:232px minmax(0,1fr);min-height:calc(100% - 40px)}
+.side{background:var(--paper);border-right:1px solid var(--line);padding:22px 14px;display:flex;flex-direction:column;gap:4px}
+.brand{font-family:var(--head);font-weight:700;font-size:19px;padding:0 10px 18px}
+.brand small{display:block;font-family:var(--body);font-weight:500;font-size:12.5px;color:var(--faint)}
+.nav{all:unset;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 12px;border-radius:10px;color:var(--soft);font-weight:500}
+.nav:hover{background:var(--sky)}
+.nav[aria-current="page"]{background:var(--blue-bg);color:var(--navy);font-weight:600}
+.nav:focus-visible{outline:3px solid var(--blue)}
+.count{font-size:12px;font-weight:700;background:var(--due);color:#fff;border-radius:999px;padding:1px 8px}
+.side .me{margin-top:auto;padding:12px;font-size:13.5px;color:var(--soft);border-top:1px solid var(--line)}
+.content{padding-block:30px 60px;padding-left:max(28px,env(safe-area-inset-left,0px));padding-right:max(28px,env(safe-area-inset-right,0px));display:grid;gap:22px;align-content:start;min-width:0;max-width:1100px}
+.panel{background:var(--paper);border-radius:18px;padding:20px;min-width:0}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
+.stat{background:var(--paper);border-radius:16px;padding:16px 18px;display:grid;gap:2px}
+.stat .n{font-family:var(--head);font-size:28px;font-weight:700;font-variant-numeric:tabular-nums}
+.stat .l{font-size:13.5px;color:var(--soft)}
+.two{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:16px}
+.chart{display:flex;align-items:flex-end;gap:8px;height:170px;padding-top:12px}
+.chart .c{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
+.chart .b{width:100%;max-width:34px;background:var(--blue);border-radius:6px 6px 2px 2px;opacity:.85}
+.chart .b.now{opacity:1;background:var(--navy)}
+.chart .m{font-size:12px;color:var(--faint)}
+.todo{display:grid;gap:10px;margin-top:12px}
+.todo button{all:unset;cursor:pointer;display:flex;justify-content:space-between;gap:12px;align-items:center;padding:12px 14px;border-radius:12px;background:var(--sky)}
+.todo button:hover{background:var(--blue-bg)}
+.todo button:focus-visible{outline:3px solid var(--blue)}
+.tools{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.search{flex:1 1 220px;border:1px solid var(--line);border-radius:999px;padding:10px 16px;font:inherit;background:var(--paper);color:var(--navy);min-width:0}
+.chip{all:unset;cursor:pointer;padding:7px 14px;border-radius:999px;font-size:14px;font-weight:500;background:var(--paper);box-shadow:inset 0 0 0 1px var(--line)}
+.chip[aria-pressed="true"]{background:var(--navy);color:#fff;box-shadow:none}
+.chip:focus-visible{outline:3px solid var(--blue)}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th{text-align:left;font-size:12.5px;font-weight:600;color:var(--faint);padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:12px;border-bottom:1px solid var(--line);white-space:nowrap}
+tr:last-child td{border-bottom:0}
+tbody tr.click{cursor:pointer}
+tbody tr.click:hover td{background:var(--sky)}
+.num{text-align:right}
+.back{all:unset;cursor:pointer;color:var(--blue);font-weight:600;font-size:14.5px}
+.profile{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:16px}
+.kv{display:grid;gap:12px}
+.kv div{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding-bottom:10px}
+.kv div:last-child{border-bottom:0}
+.kv span:first-child{color:var(--soft)}
+.yrs{display:grid;gap:8px;margin-top:12px}
+.yrs div{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-radius:12px;background:var(--sky)}
+.check{display:grid;gap:12px;padding:18px;border-radius:16px;background:var(--paper)}
+.check .amt{font-family:var(--head);font-size:24px;font-weight:700}
+.sugg{background:var(--sky);border-radius:12px;padding:12px 14px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.rep{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.rep .panel{display:grid;gap:8px;align-content:start}
+.age{display:grid;gap:10px;margin-top:6px}
+.age .r{display:grid;grid-template-columns:120px minmax(0,1fr) 40px;gap:10px;align-items:center;font-size:14px}
+.age .t{height:10px;background:var(--sky);border-radius:5px;overflow:hidden}
+.age .f{height:100%;border-radius:5px}
+.mtop{background:var(--paper);border-bottom:1px solid var(--line);padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
+.mtop .in{max-width:880px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:16px;padding-block:14px;flex-wrap:wrap}
+.mnav{display:flex;gap:4px;overflow-x:auto}
+.mnav .nav{padding:8px 14px}
+.mbody{max-width:880px;margin:0 auto;padding-block:30px 60px;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px));display:grid;gap:18px}
+.hero{background:var(--navy);color:#fff;border-radius:22px;padding:26px;display:grid;gap:14px}
+.hero .muted{color:#c7d3ef}
+.paybox{display:grid;gap:4px;background:rgba(255,255,255,.1);border-radius:14px;padding:14px 16px;font-size:15px}
+.paybox b{font-family:var(--head);font-size:20px}
+.doc{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 16px;border-radius:14px;background:var(--paper)}
+.form{display:grid;gap:14px;max-width:460px}
+label{display:grid;gap:5px;font-size:13.5px;font-weight:600;color:var(--soft)}
+input{font:inherit;font-size:15px;color:var(--navy);border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--paper)}
+input[readonly]{background:var(--sky);color:var(--faint)}
+dialog{border:0;border-radius:20px;padding:24px;max-width:min(520px,calc(100vw - 32px));width:100%;color:var(--navy);background:var(--paper)}
+dialog::backdrop{background:rgba(16,38,92,.45)}
+.cert{border:3px double var(--navy);border-radius:14px;padding:30px 20px;text-align:center;display:grid;gap:8px}
+.cert .o{font-family:var(--head);font-weight:700;font-size:15px}
+.cert .nm{font-family:var(--head);font-size:30px;font-weight:700}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--navy);color:#fff;padding:12px 20px;border-radius:999px;font-size:14.5px;box-shadow:0 10px 30px -10px rgba(16,38,92,.6);max-width:calc(100vw - 32px);text-align:center;z-index:9}
+[hidden]{display:none!important}
+@media (max-width:860px){
+  .shell{grid-template-columns:minmax(0,1fr)}
+  .side{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line);padding:10px 12px;gap:4px;align-items:center}
+  .brand{padding:0 10px 0 4px;font-size:16px;white-space:nowrap}.brand small{display:none}
+  .nav{white-space:nowrap}
+  .side .me{display:none}
+  .two,.profile{grid-template-columns:minmax(0,1fr)}
+  .content{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+}
+</style>
+
+<div class="demo"><span>Prototype by BeehiveTech for DPGSK. Everything here is made-up sample data.</span><span id="sw"></span></div>
+<div id="app" style="height:100%"></div>
+<dialog id="dlg"></dialog>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+(function(){
+const kes=n=>"KES "+Math.round(n).toLocaleString("en-KE");
+const FEE={Professional:4000,Student:2000,Corporate:15000};
+const M=[
+ ["0019","Grace Njeri","Professional","0711 908 220","Lumen Advisory LLP",{2025:1,2026:1}],
+ ["0034","Brian Otieno","Professional","0712 330 418","Kenya Data Labs",{2025:1,2026:1}],
+ ["0047","Fatuma Hassan","Professional","0729 004 615","Pwani Health",{2025:0,2026:0}],
+ ["0058","Kevin Mutua","Student","0790 552 183","Strathmore University",{2026:1}],
+ ["0077","Peter Mwangi","Professional","0720 115 902","Kilele Telecom",{2025:1,2026:1}],
+ ["0088","David Kiprotich","Professional","0700 220 314","Mwanzo Health",{2025:1,2026:1}],
+ ["0102","Mercy Chebet","Professional","0724 871 090","Rift Insurance",{2025:1,2026:0}],
+ ["0115","Ian Wekesa","Professional","0718 640 777","Jamii Fintech",{2025:1,2026:1}],
+ ["0142","Wanjiru Kamau","Professional","0722 418 905","Safiri Bank",{2024:1,2025:1,2026:0}],
+ ["0156","Samuel Ochieng","Professional","0798 551 016","Lumen Advisory LLP",{2025:1,2026:1}],
+ ["0177","Peter Maina","Professional","0741 660 238","Tausi Insurance",{2025:1,2026:0}],
+ ["0203","Lucy Wambui","Professional","0725 377 640","Lumen Advisory LLP",{2025:1,2026:1}],
+ ["0219","Amina Yusuf","Student","0757 210 334","Moi University",{2026:0}],
+ ["0231","Achieng Odhiambo","Student","0733 102 557","University of Nairobi",{2026:0}],
+ ["0244","Daniel Kariuki","Professional","0711 245 906","Nairobi County",{2025:1,2026:1}],
+ ["C-007","Lumen Advisory LLP","Corporate","020 765 4400","3 nominees: Grace, Samuel, Lucy",{2025:1,2026:1}]
+].map(r=>({id:r[0],name:r[1],type:r[2],phone:r[3],org:r[4],years:r[5]}));
+const byId=id=>M.find(m=>m.id===id);
+const no=m=>m.type==="Corporate"?m.id:"DPG-"+m.id;
+function status(m){const owed=Object.keys(m.years).filter(y=>!m.years[y]);if(!owed.length)return["Paid up","paid"];if(owed.length>1)return["Owes "+owed.length+" years","late"];return["Owes "+owed[0],"owes"]}
+let Q=[
+ {id:"q1",amt:2000,from:"0733 102 557",ref:"membership",via:"M-Pesa",who:"0231",why:"Same phone number as Achieng Odhiambo, and the amount is the student fee."},
+ {id:"q2",amt:4000,from:"PETER MAINA, 0741 660 238",ref:"DPG0077",via:"M-Pesa",who:"0177",why:"The reference points to Peter Mwangi, who has already paid. The sender's name and phone belong to Peter Maina."},
+ {id:"q3",amt:8000,from:"F HASSAN SUBS",ref:"bank transfer",via:"KCB Bank",who:"0047",why:"The name matches Fatuma Hassan. She owes 2025 and 2026, so this clears both, oldest year first."}
+];
+let P=[["14 Nov","Ian Wekesa","M-Pesa",4000],["13 Nov","Daniel Kariuki","M-Pesa",4000],["11 Nov","Lumen Advisory LLP","Equity Bank",15000],["9 Nov","Kevin Mutua","M-Pesa",2000],["6 Nov","Brian Otieno","M-Pesa",4000],["2 Nov","David Kiprotich","M-Pesa",4000]];
+const MONTHS=[["Jan",312],["Feb",168],["Mar",96],["Apr",52],["May",40],["Jun",28],["Jul",20],["Aug",24],["Sep",18],["Oct",26],["Nov",22]];
+const S={role:null,page:"overview",member:null,filter:"All",q:"",tab:"check",extraK:0,extraPaid:0,meId:"0142",receipts:[["Feb 2025","RCT-0871",4000,"2025 membership"],["Jan 2024","RCT-0512",4000,"2024 membership"]]};
+const app=document.getElementById("app"),sw=document.getElementById("sw");
+function toast(t){const e=document.getElementById("toast");e.textContent=t;e.hidden=false;clearTimeout(e._t);e._t=setTimeout(()=>e.hidden=true,3200)}
+function pay(m,amt,via){let left=amt;Object.keys(m.years).sort().forEach(y=>{const f=FEE[m.type];if(!m.years[y]&&left>=f){m.years[y]=1;left-=f;if(y==="2026")S.extraPaid++}});S.extraK+=amt;MONTHS[10][1]+=amt/1000;P.unshift(["Today",m.name,via,amt])}
+
+function welcome(){sw.innerHTML="";app.innerHTML=`<div class="welcome"><div class="wbox">
+ <div style="display:grid;gap:12px"><h1>Step inside DPGSK's future membership platform.</h1><p class="lead muted">A clickable preview of the system BeehiveTech would build. Choose who you want to be. Nothing here is real, so click anything.</p></div>
+ <div class="roles">
+  <button class="role" data-role="admin"><span class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg></span><h2>I'm on the Committee</h2><span class="muted">See members, check payments and pull reports, as the Treasurer would.</span><span class="go">Open the admin view</span></button>
+  <button class="role" data-role="member"><span class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></span><h2>I'm a member</h2><span class="muted">See your membership, pay your subscription and download your certificate.</span><span class="go">Open the member view</span></button>
+ </div></div></div>`}
+
+const AN=[["overview","Overview"],["members","Members"],["payments","Payments"],["reports","Reports"]];
+function admin(){sw.innerHTML=`<button data-role="member">Switch to member view</button> · <button data-role="">Start over</button>`;
+ if(!AN.find(n=>n[0]===S.page))S.page="overview";
+ app.innerHTML=`<div class="shell"><nav class="side" aria-label="Admin"><div class="brand">DPGSK<small>Membership admin</small></div>${AN.map(([k,l])=>`<button class="nav" data-page="${k}" ${S.page===k?'aria-current="page"':""}><span>${l}</span>${k==="payments"&&Q.length?`<span class="count">${Q.length}</span>`:""}</button>`).join("")}<div class="me">Signed in as<br><b style="color:var(--navy)">Treasurer</b></div></nav><main class="content" id="pg"></main></div>`;
+ document.getElementById("pg").innerHTML=({overview,members,payments,reports})[S.page]()}
+function overview(){const paid=214+S.extraPaid,col=806000+S.extraK,mx=Math.max(...MONTHS.map(m=>m[1]));
+ return `<div><h1>Good morning, Treasurer</h1><p class="muted" style="margin:6px 0 0">Here's where 2026 membership stands today.</p></div>
+ <div class="stats">
+  <div class="stat"><span class="n">278</span><span class="l">Members on the register</span></div>
+  <div class="stat"><span class="n">${paid}</span><span class="l">Paid up for 2026</span></div>
+  <div class="stat"><span class="n">${kes(col)}</span><span class="l">Collected in 2026</span></div>
+  <div class="stat"><span class="n">${278-paid}</span><span class="l">Still to renew</span></div>
+ </div>
+ <div class="two">
+  <div class="panel"><h3>Money in, month by month</h3><p class="muted" style="margin:2px 0 0;font-size:14px">Most members renew in January and February.</p><div class="chart">${MONTHS.map((m,i)=>`<div class="c"><div class="b ${i===10?"now":""}" style="height:${Math.max(4,m[1]/mx*130)}px" title="${m[0]}: ${kes(m[1]*1000)}"></div><span class="m">${m[0]}</span></div>`).join("")}</div></div>
+  <div class="panel"><h3>Needs your attention</h3><div class="todo">
+   ${Q.length?`<button data-page="payments"><span>${Q.length} payment${Q.length>1?"s":""} to check</span><span class="tag owes">Review</span></button>`:`<div class="muted" style="padding:6px 2px">All payments are matched.</div>`}
+   <button data-page="members" data-filter="Owes"><span>${278-paid} members haven't renewed</span><span class="tag info">See list</span></button>
+   <button data-page="reports"><span>AGM summary is ready</span><span class="tag info">Open</span></button>
+  </div></div>
+ </div>`}
+function members(){if(S.member)return memberPage(byId(S.member));
+ const f=S.filter,q=S.q.toLowerCase();
+ const rows=M.filter(m=>(f==="All"||(f==="Paid up"&&status(m)[1]==="paid")||(f==="Owes"&&status(m)[1]!=="paid")||(f==="Students"&&m.type==="Student")||(f==="Corporate"&&m.type==="Corporate"))&&(!q||(m.name+" "+no(m)+" "+m.phone).toLowerCase().includes(q)));
+ return `<div><h1>Members</h1><p class="muted" style="margin:6px 0 0">A sample of the register. Click anyone to open their record.</p></div>
+ <div class="tools"><input class="search" id="q" placeholder="Search by name, number or phone" value="${S.q}" aria-label="Search members">${["All","Paid up","Owes","Students","Corporate"].map(c=>`<button class="chip" data-filter="${c}" aria-pressed="${f===c}">${c}</button>`).join("")}</div>
+ <div class="panel tw"><table><thead><tr><th>Name</th><th>Number</th><th>Type</th><th>Phone</th><th>2026</th></tr></thead><tbody>${rows.map(m=>{const s=status(m);return `<tr class="click" data-member="${m.id}" tabindex="0"><td><b>${m.name}</b></td><td>${no(m)}</td><td>${m.type}</td><td>${m.phone}</td><td><span class="tag ${s[1]}">${s[0]}</span></td></tr>`}).join("")||`<tr><td colspan="5" class="muted">No one matches that search.</td></tr>`}</tbody></table></div>`}
+function memberPage(m){const s=status(m),owe=Object.keys(m.years).filter(y=>!m.years[y]);
+ return `<button class="back" data-back>Back to members</button>
+ <div class="tools" style="justify-content:space-between"><div><h1>${m.name}</h1><p class="muted" style="margin:4px 0 0">${no(m)} · ${m.type} member</p></div><span class="tag ${s[1]}" style="font-size:14px">${s[0]}</span></div>
+ <div class="profile">
+  <div class="panel"><h3>Details</h3><div class="kv" style="margin-top:12px"><div><span>Phone</span><span>${m.phone}</span></div><div><span>${m.type==="Corporate"?"Covers":"Employer"}</span><span>${m.org}</span></div><div><span>Annual fee</span><span>${kes(FEE[m.type])}</span></div></div></div>
+  <div class="panel"><h3>Subscriptions by year</h3><div class="yrs">${Object.keys(m.years).sort().reverse().map(y=>`<div><span>${y}</span>${m.years[y]?'<span class="tag paid">Paid</span>':`<span class="tag ${+y<2026?"late":"owes"}">Owes ${kes(FEE[m.type])}</span>`}</div>`).join("")}</div>
+  ${owe.length?`<div class="tools" style="margin-top:14px"><button class="btn sm" data-act="remind" data-id="${m.id}">Send a reminder email</button><button class="btn sm ghost" data-act="record" data-id="${m.id}">Record a payment</button></div>`:""}</div>
+ </div>`}
+function payments(){const t=S.tab;
+ return `<div><h1>Payments</h1><p class="muted" style="margin:6px 0 0">The system matches most payments by itself. Anything it isn't sure about waits here for you.</p></div>
+ <div class="tabs"><button class="chip" data-tab="check" aria-pressed="${t==="check"}">To check (${Q.length})</button><button class="chip" data-tab="all" aria-pressed="${t==="all"}">All recent payments</button></div>
+ ${t==="check"?(Q.length?`<div style="display:grid;gap:14px">${Q.map(x=>`<div class="check"><div class="tools" style="justify-content:space-between"><div><div class="amt">${kes(x.amt)}</div><div class="muted" style="font-size:14px">${x.via} · from ${x.from} · reference "${x.ref}"</div></div><span class="tag owes">Not sure who this is</span></div><div class="sugg">Probably <b>${byId(x.who).name}</b>. ${x.why}</div><div class="tools"><button class="btn sm" data-act="match" data-q="${x.id}">Yes, match to ${byId(x.who).name.split(" ")[0]}</button><button class="btn sm ghost" data-act="later">Choose someone else</button></div></div>`).join("")}</div>`:`<div class="panel"><h3>All done</h3><p class="muted" style="margin:6px 0 0">Every payment is matched to a member. Receipts have gone out automatically.</p></div>`)
+ :`<div class="panel tw"><table><thead><tr><th>Date</th><th>From</th><th>Paid via</th><th class="num">Amount</th><th>Receipt</th></tr></thead><tbody>${P.map(p=>`<tr><td>${p[0]}</td><td><b>${p[1]}</b></td><td>${p[2]}</td><td class="num">${kes(p[3])}</td><td><span class="tag paid">Emailed</span></td></tr>`).join("")}</tbody></table></div>`}`}
+function reports(){const paid=214+S.extraPaid;
+ const age=[["This year only",Math.max(0,52-S.extraPaid),"var(--due)"],["1 year behind",9,"var(--late)"],["2+ years behind",byId("0047").years[2025]?2:3,"var(--late)"]];const mx=Math.max(...age.map(a=>a[1]),1);
+ return `<div><h1>Reports</h1><p class="muted" style="margin:6px 0 0">Ready whenever the Committee or the auditor asks.</p></div>
+ <div class="rep">
+  <div class="panel"><h3>AGM membership summary</h3><p class="muted" style="margin:0">278 members · ${paid} paid up · ${kes(806000+S.extraK)} collected in 2026.</p><button class="btn sm ghost" data-act="dl" style="justify-self:start">Download PDF</button></div>
+  <div class="panel"><h3>Who owes, and for how long</h3><div class="age">${age.map(a=>`<div class="r"><span>${a[0]}</span><span class="t"><span class="f" style="display:block;width:${a[1]/mx*100}%;background:${a[2]}"></span></span><span class="num">${a[1]}</span></div>`).join("")}</div><button class="btn sm ghost" data-act="dl" style="justify-self:start">Download Excel</button></div>
+  <div class="panel"><h3>Payments for the auditor</h3><p class="muted" style="margin:0">Every payment, who it was matched to, and every change made, with dates and reasons.</p><button class="btn sm ghost" data-act="dl" style="justify-self:start">Download Excel</button></div>
+ </div>`}
+
+const MN=[["home","Home"],["mypay","Payments"],["docs","Documents"],["me","My details"]];
+function member(){const me=byId(S.meId);sw.innerHTML=`<button data-role="admin">Switch to admin view</button> · <button data-role="">Start over</button>`;
+ if(!MN.find(n=>n[0]===S.page))S.page="home";
+ app.innerHTML=`<header class="mtop"><div class="in"><div class="brand" style="padding:0">DPGSK<small>Member portal</small></div><nav class="mnav" aria-label="Member">${MN.map(([k,l])=>`<button class="nav" data-page="${k}" ${S.page===k?'aria-current="page"':""}>${l}</button>`).join("")}</nav></div></header><main class="mbody">${({home,mypay,docs,me:mydetails})[S.page](me)}</main>`}
+function home(m){const owe=!m.years[2026];
+ return `<div class="hero"><div class="tools" style="justify-content:space-between"><div><h1 style="color:#fff">Hi, Wanjiru</h1><p class="muted" style="margin:4px 0 0">${no(m)} · ${m.type} member since 2021</p></div><span class="tag ${owe?"owes":"paid"}" style="font-size:14px">${owe?"2026 not yet paid":"Paid up for 2026"}</span></div>
+ ${owe?`<div class="paybox"><span>Pay your 2026 membership</span><b>${kes(4000)}</b><span>M-Pesa Paybill <b style="font-size:15.5px">000000</b>, account <b style="font-size:15.5px">DPG0142</b></span></div><button class="btn" data-act="mpay" style="justify-self:start;background:#fff;color:var(--navy)">Pretend I've paid by M-Pesa</button>`:`<p style="margin:0">Thank you. Your receipt is in your email and your 2026 certificate is ready.</p><button class="btn" data-page="docs" style="justify-self:start;background:#fff;color:var(--navy)">Get my certificate</button>`}</div>
+ <div class="two"><div class="panel"><h3>Your membership</h3><div class="yrs">${Object.keys(m.years).sort().reverse().map(y=>`<div><span>${y}</span><span class="tag ${m.years[y]?"paid":"owes"}">${m.years[y]?"Paid":"Due"}</span></div>`).join("")}</div></div>
+ <div class="panel"><h3>Coming up</h3><p class="muted" style="margin:8px 0 0">2027 renewals open on 1 January. We'll email you a reminder, and you can pay any time after that.</p></div></div>`}
+function mypay(){return `<h1>Payments</h1><div class="panel tw"><table><thead><tr><th>Date</th><th>For</th><th class="num">Amount</th><th>Receipt</th></tr></thead><tbody>${S.receipts.map(r=>`<tr><td>${r[0]}</td><td>${r[3]}</td><td class="num">${kes(r[2])}</td><td>${r[1]}</td></tr>`).join("")}</tbody></table></div>`}
+function docs(m){const ok=m.years[2026];return `<h1>Documents</h1><div style="display:grid;gap:10px">
+ <div class="doc"><div><b>Membership certificate 2026</b><div class="muted" style="font-size:14px">${ok?"Ready to download":"Available once 2026 is paid"}</div></div><button class="btn sm" data-act="cert" ${ok?"":"disabled"}>View</button></div>
+ ${S.receipts.map(r=>`<div class="doc"><div><b>Receipt ${r[1]}</b><div class="muted" style="font-size:14px">${r[3]} · ${kes(r[2])}</div></div><button class="btn sm ghost" data-act="rcpt" data-r="${r[1]}">View</button></div>`).join("")}</div>`}
+function mydetails(m){return `<h1>My details</h1><div class="panel"><div class="form">
+ <label for="f1">Membership number<input id="f1" value="${no(m)}" readonly></label>
+ <label for="f2">Phone<input id="f2" value="${m.phone}"></label>
+ <label for="f3">Employer<input id="f3" value="${m.org}"></label>
+ <button class="btn" data-act="save" style="justify-self:start">Save changes</button>
+ <p class="muted" style="margin:0;font-size:14px">Your membership number can only be changed by the Committee.</p></div></div>`}
+
+const dlg=document.getElementById("dlg");
+function openD(h){dlg.innerHTML=h+`<div class="tools" style="justify-content:flex-end;margin-top:16px"><button class="btn ghost sm" data-close>Close</button></div>`;dlg.showModal?dlg.showModal():dlg.setAttribute("open","")}
+function closeD(){dlg.close?dlg.close():dlg.removeAttribute("open")}
+
+function render(){S.role==="admin"?admin():S.role==="member"?member():welcome()}
+document.addEventListener("click",e=>{
+ const t=e.target.closest("[data-role],[data-page],[data-filter],[data-member],[data-back],[data-tab],[data-act],[data-close]");if(!t||t.disabled)return;
+ if(t.hasAttribute("data-close")){closeD();return}
+ if(t.hasAttribute("data-role")){S.role=t.dataset.role||null;S.page=S.role==="member"?"home":"overview";S.member=null;render();scrollTo(0,0);return}
+ if(t.dataset.page){S.page=t.dataset.page;S.member=null;if(t.dataset.filter)S.filter=t.dataset.filter;render();scrollTo(0,0);return}
+ if(t.dataset.filter){S.filter=t.dataset.filter;render();return}
+ if(t.dataset.member){S.member=t.dataset.member;render();scrollTo(0,0);return}
+ if(t.hasAttribute("data-back")){S.member=null;render();return}
+ if(t.dataset.tab){S.tab=t.dataset.tab;render();return}
+ const a=t.dataset.act;
+ if(a==="match"){const x=Q.find(q=>q.id===t.dataset.q),m=byId(x.who);pay(m,x.amt,x.via);Q=Q.filter(q=>q!==x);render();toast("Matched to "+m.name+". Receipt emailed.")}
+ if(a==="later")toast("In the real system you'd pick any member from a searchable list.");
+ if(a==="remind")toast("Reminder emailed to "+byId(t.dataset.id).name+".");
+ if(a==="record"){const m=byId(t.dataset.id);const amt=Object.keys(m.years).filter(y=>!m.years[y]).length*FEE[m.type];pay(m,amt,"Cash");render();toast("Payment recorded for "+m.name+". Receipt emailed.")}
+ if(a==="dl")toast("In the real system this downloads straight away.");
+ if(a==="mpay"){const m=byId(S.meId);pay(m,4000,"M-Pesa");S.receipts.unshift(["Today","RCT-1042",4000,"2026 membership"]);render();toast("Payment received. Your receipt is on its way.")}
+ if(a==="cert"){const m=byId(S.meId);openD(`<div class="cert"><span class="o">Data Privacy and Governance Society of Kenya</span><span class="muted">Certificate of membership</span><span class="nm">${m.name}</span><span>${m.type} member, 1 January to 31 December 2026</span><span class="muted" style="font-size:13px">${no(m)} · Sample certificate</span></div>`)}
+ if(a==="rcpt"){const r=S.receipts.find(x=>x[1]===t.dataset.r);openD(`<h2>Receipt ${r[1]}</h2><div class="kv" style="margin-top:16px"><div><span>Member</span><span>Wanjiru Kamau</span></div><div><span>Date</span><span>${r[0]}</span></div><div><span>For</span><span>${r[3]}</span></div><div><span>Amount</span><span><b>${kes(r[2])}</b></span></div></div><p class="muted" style="font-size:13px">Sample receipt.</p>`)}
+ if(a==="save")toast("Saved. The Committee can see what changed and when.");
+});
+document.addEventListener("keydown",e=>{const r=e.target.closest&&e.target.closest("tr[data-member]");if(r&&(e.key==="Enter"||e.key===" ")){e.preventDefault();r.click()}});
+document.addEventListener("input",e=>{if(e.target.id==="q"){S.q=e.target.value;const pos=e.target.selectionStart;render();const q=document.getElementById("q");q.focus();q.setSelectionRange(pos,pos)}});
+dlg.addEventListener("click",e=>{if(e.target===dlg)closeD()});
+render();
+})();
+</script>
